@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Food Menu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            max-width: 400px;
+            margin: 20px 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            flex: 1;
+            font-size: 16px;
+            padding: 6px;
+        }
+
+        .search-container button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #555;
+        }
+
+        table {
+            width: 60%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Food Menu</h1>
+
+    <button onclick="loadFood()">Load Menu</button>
+
+    <div class="search-container">
+        <input type="number" id="searchInput" placeholder="Search by ID" min="1">
+        <button type="button" onclick="searchFoodById()">🔍</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Food</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody id="foodStuff"></tbody>
+    </table>
+
+    <script>
+        async function loadFood() {
+            const tableBody = document.getElementById("foodStuff");
+            tableBody.innerHTML = "";
+
+            try {
+                const response = await fetch("/api/foodStuff");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch food");
+                }
+
+                const foods = await response.json();
+                renderFood(foods);
+            } catch (error) {
+                const row = document.createElement("tr");
+                row.innerHTML = "<td colspan='3'>Error loading food menu</td>";
+                tableBody.appendChild(row);
+                console.error(error);
+            }
+        }
+
+        async function searchFoodById() {
+            const id = document.getElementById("searchInput").value.trim();
+            const tableBody = document.getElementById("foodStuff");
+            tableBody.innerHTML = "";
+
+            if (!id) {
+                loadFood();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/foodStuff/${id}`);
+
+                if (!response.ok) {
+                    throw new Error("Food not found");
+                }
+
+                const food = await response.json();
+                renderFood([food]);
+            } catch (error) {
+                const row = document.createElement("tr");
+                row.innerHTML = "<td colspan='3'>Food not found</td>";
+                tableBody.appendChild(row);
+                console.error(error);
+            }
+        }
+
+        function renderFood(items) {
+            const tableBody = document.getElementById("foodStuff");
+            tableBody.innerHTML = "";
+
+            items.forEach((food) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${food.id}</td>
+                    <td>${food.food}</td>
+                    <td>${food.price}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
